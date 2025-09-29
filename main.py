@@ -23,10 +23,15 @@ def setup_driver():
     print("Configurando as opções do Google Chrome...")
     options = Options()
     options.add_argument("--headless")
+    options.add_experimental_option("prefs", {"intl.accept_languages": "en,en_US"})
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--log-level=3")
     options.add_argument("--start-maximized")
+
+    user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+    options.add_argument(f"user-agent={user_agent}")
+
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
     return driver
@@ -39,7 +44,11 @@ def login_x(driver, username, password, username_extra):
     url = "https://x.com/i/flow/login"
     driver.get(url)
 
-    input_username = wait.until(EC.presence_of_element_located((By.NAME, "text")))
+    input_username = wait.until(
+        EC.presence_of_element_located(
+            (By.CSS_SELECTOR, "input[autocomplete='username']")
+        )
+    )
     input_username.send_keys(username)
     driver.find_element(By.XPATH, "//span[text()='Next']").click()
     print("Usuário inserido.")
@@ -357,7 +366,9 @@ def main():
         print("Análise de sentimentos concluída.")
 
         print("\nSalvando os resultados em arquivos...")
-        df.to_csv(f"{NOME_DO_PORTAL}_posts_comentarios.csv", index=False, encoding="utf-8-sig")
+        df.to_csv(
+            f"{NOME_DO_PORTAL}_posts_comentarios.csv", index=False, encoding="utf-8-sig"
+        )
 
         print("Começando análise de dados...")
         sentiment_counts = (
